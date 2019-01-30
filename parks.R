@@ -19,10 +19,10 @@ library(htmltools)
 #according to whether or not they have longitudinal data
 
 park_shapes <- st_read("G:/DATABASE/City_Council/Public_Advocate/Parks/parks_data/Parks_Properties/geo_export_11cd0a61-e45b-447b-99f0-d4ccbde643ce.shp") # reads in spatial object
-st_transform(park_shapes,'+proj=longlat +datum=WGS84')
-st_crs(park_shapes) <-4326
+# st_transform(park_shapes,'+proj=longlat +datum=WGS84')
+# st_crs(park_shapes) <-4326
 keeps <- c("acres", "borough",'class','communityb','jurisdicti','name311', 'signname', 'subcategor',
-           'typecatego','waterfront')
+           'typecatego','waterfront', 'gispropnum')
 park_shapes<-park_shapes[keeps]
 #mapview(park_shapes)
 #summary(park_shapes)
@@ -104,9 +104,14 @@ handball_lat <- st_as_sf(handball_lat, coords = c('handb_lon','handb_lat'))
 st_crs(handball_lat) <- 4326
 
 
-
-
-
+indoor_pools <- fromJSON("G:/DATABASE/City_Council/Public_Advocate/Parks/parks_data/DPR_Pools_indoor_001.json")
+outdoor_pools <- fromJSON("G:/DATABASE/City_Council/Public_Advocate/Parks/parks_data/DPR_Pools_outdoor_001.json")
+pools <- indoor_pools %>% 
+  rename(Type = Pools_indoor_Type) %>% 
+  bind_rows(outdoor_pools %>% rename(Type = Pools_outdoor_Type)) %>% 
+  mutate(lat = as.numeric(lat),
+         lon = as.numeric(lon)) %>% 
+  st_as_sf(coords = c("lon", "lat"), crs = "+proj=longlat +datum=WGS84")
 
 
 
@@ -149,11 +154,11 @@ st_crs(tennis_lat) <- 4326
 
 
 
-play_areas <- st_read("G:/DATABASE/City_Council/Public_Advocate/Parks/Play Areas/geo_export_c03428b3-2818-41eb-a86b-e798978499a0.shp") # reads in spatial object
-st_transform(play_areas,'+proj=longlat +datum=WGS84')
-st_crs(play_areas) <-4326
-
-
+play_areas <- st_read("G:/DATABASE/City_Council/Public_Advocate/Parks/Play Areas/geo_export_c03428b3-2818-41eb-a86b-e798978499a0.shp", stringsAsFactors = FALSE) %>% 
+  st_transform('+proj=longlat +datum=WGS84') %>% 
+  group_by(gispropnum, borough, park_name) %>% 
+  summarize()
+# st_crs(play_areas) <-4326
 
 
 bbq <- fromJSON('G:/DATABASE/City_Council/Public_Advocate/Parks/parks_data/DPR_Barbecue_001.json') %>% as.data.frame()
@@ -161,6 +166,27 @@ bbq <- bbq['Name']
 bbq$name311 <- bbq$Name
 
 
+concessions_raw <- fromJSON("G:/DATABASE/City_Council/Public_Advocate/Parks/parks_data/DPR_Concessions_001.json", flatten = TRUE)
+
+concessions <- concessions_raw %>% 
+  filter(type %in% c("Restaurant", "Snack Bar", "Food Cart")) %>% 
+  as_tibble() %>% 
+  mutate_at(vars(contains(".")), ~map(., function(x) as_tibble(x))) %>% 
+  mutate_at(vars(emails.email, phones.phone, websites.website), ~map(., "value")) %>% 
+  mutate_at(vars(emails.email, phones.phone, websites.website), as.character) %>% 
+  mutate_at(vars(emails.email, phones.phone, websites.website), ~case_when(. == "NULL" ~ NA_character_, TRUE ~ .)) %>% 
+  unnest(locations.location) %>% 
+  rename_at(vars(contains(".")), ~str_split(., "\\.",simplify = TRUE)[, 2]) %>% 
+  mutate_at(vars(lat, lng), as.numeric) %>% 
+  st_as_sf(coords = c("lng", "lat"), crs = '+proj=longlat +datum=WGS84')
+
+dogs <- fromJSON("G:/DATABASE/City_Council/Public_Advocate/Parks/parks_data/DPR_DogRuns_001.json", flatten = TRUE) %>% 
+  # select(Name, DogRuns_Type) %>% 
+  # mutate(dog_name = Name) %>% 
+  identity() %>% 
+  inner_join(park_shapes, by = c("Prop_ID" = "gispropnum")) %>% 
+  st_as_sf() %>% 
+  st_transform('+proj=longlat +datum=WGS84')
 
 #separate dataframes into lists of frames to be spatially joined (for greatest accuracy)
 #and frames to be joined by attribute.
@@ -181,6 +207,7 @@ parks$handball <- as.numeric(!is.na(parks$handb_Name))
 parks$tennis <- as.numeric(!is.na(parks$tennis_Name))
 parks$tracks <- as.numeric(!is.na(parks$tracks_Name))
 parks$bbq <- as.numeric(!is.na(parks$Name))
+parks$dog <- as.numeric(!is.na(parks$dog_name))
 
 drops <- c("bball_Name","bocce_Name",'crick_Name','handb_Name','tennis_Name', 'tracks_Name')
 parks <- parks[ , !(names(parks) %in% drops)]
@@ -203,50 +230,66 @@ parks$centroid <- st_transform(parks$geometry,4326) %>%
 # nrow(all_bball)
 
 
-labs <- lapply(seq(nrow(parks)), function(i) {
-  paste0( '<p>', parks[i, "name311"], '<p></p>', 
-          parks[i, "basketball"], ', ', 
-          parks[i, "handball"],'</p><p>', 
-          parks[i, "tennis"], '</p>' ) 
+labs <- lapply(seq(nrow(parks)),function(i) {
+  paste0( '<p>', parks[["name311"]][i], '<p></p>', 
+          parks[["basketball"]][i], ', ', 
+          parks[["handball"]][i],'</p><p>', 
+          parks[["tennis"]][i], '</p>' ) 
 })
 
-parks <- unique(parks)
+parks <- distinct(parks, name311, .keep_all = TRUE)
 
 m <- leaflet() %>%
   addProviderTiles("CartoDB.Positron") %>%
-  addPolygons(data = parks, weight =1,
+  addPolygons(data = parks, weight =0,
+              fillColor = "green",
+              fillOpacity = .4,
               label = ~label,#lapply(labs, HTML),
               labelOptions = labelOptions(noHide = F,
                                           direction = 'auto')) %>%
-  addCircles(data = play_areas %>% st_centroid(),
+  addCircleMarkers(data = play_areas %>% st_centroid(),
               # weight = 10,
               label = 'park_name',
-              color = 'black',
+              color = '#82C91E',
               group = 'play areas',
-             fillOpacity = 1)%>%
-  addCircles(data=bball_lat, group = 'basketball', color= 'red', fill = TRUE, fillOpacity = 1)%>%
-  addCircles(data=bocce, group = 'bocce', color= 'blue', fill = TRUE, fillOpacity = 1)%>%
-  addCircles(data=cricket_lat, group = 'cricket', color= 'pink', fill = TRUE, fillOpacity = 1)%>%
-  addCircles(data=handball_lat, group = 'handball', color= 'green', fill = TRUE, fillOpacity = 1)%>%
-  addCircles(data=tennis_lat, group = 'tennis', color= 'purple', fill = TRUE, fillOpacity = 1)%>%
-  addCircles(data=tracks_lat, group = 'tracks', color= 'orange', fill = TRUE, fillOpacity = 1)%>%
+             fillOpacity = .8,
+             stroke = FALSE,
+             radius = 4)%>%
+  addCircleMarkers(data=bball_lat, group = 'basketball', color= '#BE4BDB', fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4)%>%
+  # addCircles(data=bocce, group = 'bocce', color= 'blue', fill = TRUE, fillOpacity = 1)%>%
+  # addCircles(data=cricket_lat, group = 'cricket', color= 'pink', fill = TRUE, fillOpacity = 1)%>%
+  addCircleMarkers(data=handball_lat, group = 'handball', color= '#228AE6', fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4)%>%
+  # addCircles(data=tennis_lat, group = 'tennis', color= 'purple', fill = TRUE, fillOpacity = 1)%>%
+  addCircleMarkers(data=tracks_lat, group = 'tracks', color= '#12B886', fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4)%>%
+  addPolygons(data = parks %>% filter(bbq == 1), color = "#F59F00", group = "BBQ", fillOpacity = 1, stroke = FALSE) %>% 
+  addCircleMarkers(data = concessions, color = "red", group = "Food", fillOpacity = .8, stroke = FALSE, radius = 4) %>% 
+  addCircleMarkers(data = pools, color = "blue", group = "pools", fillOpacity = .8, stroke = FALSE, radius = 4) %>% 
+  addPolygons(data = dogs, color = "brown", group = "dog", fillOpacity = 1, stroke = FALSE) %>%
+  
   addLayersControl(
-    baseGroups = c('basketball','bocce','cricket', 'handball','tennis','tracks', 'play areas'),
+    baseGroups = c('basketball', 'handball','tracks', 'play areas', "BBQ", "Food", "pools", "dog"),
     options = layersControlOptions(collapsed = FALSE)
   ) %>%
-  addLegend("topleft", values = ~basketball,
-            colors = c('red', 'blue', 'pink', 'green', 'purple', 'orange', 'black'),
-            labels = c('basketball','bocce', 'cricket', 'handball','tennis','tracks', 'play areas'),
-            title = "test",
-            opacity = 1
-  ) %>%
+  # addLegend("topleft", values = ~basketball,
+  #           colors = c('red', 'blue', 'pink', 'green', 'purple', 'orange', 'black', "gray"),
+  #           labels = c('basketball','bocce', 'cricket', 'handball','tennis','tracks', 'play areas', "BBQ"),
+  #           title = "test",
+  #           opacity = 1
+  # ) %>%
 identity()
 m
 
 
 
 
-
+parks[duplicated(parks$geometry),] %>%
+  as_tibble() %>% 
+  select_if(~!is.list(.)) %>% 
+  group_by(name311) %>% 
+  summarise_all(~length(unique(.))) %>%
+  gather(col, num, -name311) %>% 
+  pull(num) %>% 
+  unique()
 
 
 ggplot(play_areas) + geom_sf()
