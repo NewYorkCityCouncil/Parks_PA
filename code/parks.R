@@ -320,6 +320,11 @@ m <- leaflet() %>%
 identity()
 m
 
+htmlwidgets::saveWidget(m, file = "facilities_map.html", selfcontained = FALSE)
+unlink(here::here("results", "facilities_map_files"))
+file.rename("facilities_map.html", "results/facilities_map.html")
+file.rename("facilities_map_files", "results/facilities_map_files")
+
 
 
 #
