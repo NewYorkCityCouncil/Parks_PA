@@ -278,7 +278,7 @@ parks <- distinct(parks, name311, .keep_all = TRUE) %>%
 
 m <- leaflet() %>%
   # addProviderTiles("CartoDB.Positron") %>%
-  addCouncilStyle(add_dists = FALSE) %>%
+  addCouncilStyle() %>%
   addPolygons(data = park_shapes, weight =0,
               fillColor = "#82c91e",
               fillOpacity = .4,
