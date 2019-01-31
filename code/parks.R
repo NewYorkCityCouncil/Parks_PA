@@ -317,11 +317,14 @@ m <- leaflet() %>%
   #           opacity = 1
   # ) %>%
   setView(-73.88099670410158,40.72540497175607,  zoom = 10.5) %>%
+  registerPlugin(geocoder) %>%
+  # registerPlugin(fontawsome_markers) %>%
+  onRender(geocode_js, data = list(key = Sys.getenv("GEOCODE_API_KEY"))) %>%
 identity()
 m
 
 htmlwidgets::saveWidget(m, file = "facilities_map.html", selfcontained = FALSE)
-unlink(here::here("results", "facilities_map_files"))
+unlink(here::here("results", "facilities_map_files"), recursive = TRUE)
 file.rename("facilities_map.html", "results/facilities_map.html")
 file.rename("facilities_map_files", "results/facilities_map_files")
 

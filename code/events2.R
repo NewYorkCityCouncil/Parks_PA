@@ -5,6 +5,10 @@ library(leaflet)
 library(councildown)
 library(lubridate)
 # library(timevis)
+library(htmltools)
+library(htmlwidgets)
+
+source(here::here("code", "util.R"))
 
 events_raw <- fromJSON("https://www.nycgovparks.org/xml/events_300_rss.json") %>%
   # as_tibble() %>%
@@ -52,17 +56,19 @@ events <- events_raw %>%
   identity()
 
 
-
 events_map <- leaflet(events) %>%
   addCouncilStyle() %>%
   addCircleMarkers(radius = 4,
                    color = "#F59F00",
                    popup = ~councilPopup(caption), popupOptions = popupOptions(maxHeight = 250), fillOpacity = .8,
                    stroke = FALSE) %>%
-  setView(-73.88099670410158,40.72540497175607,  zoom = 10.5)
+  setView(-73.88099670410158,40.72540497175607,  zoom = 10.5)%>%
+  registerPlugin(geocoder) %>%
+  # registerPlugin(fontawsome_markers) %>%
+  onRender(geocode_js, data = list(key = Sys.getenv("GEOCODE_API_KEY")))
 
 htmlwidgets::saveWidget(events_map, file = "events_map.html", selfcontained = FALSE)
-unlink(here::here("results", "events_map_files"))
+unlink(here::here("results", "events_map_files"), recursive = TRUE)
 file.rename("events_map.html", "results/events_map.html")
 file.rename("events_map_files", "results/events_map_files")
 
