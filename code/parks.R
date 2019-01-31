@@ -280,7 +280,7 @@ m <- leaflet() %>%
   # addProviderTiles("CartoDB.Positron") %>%
   addCouncilStyle(add_dists = FALSE) %>%
   addPolygons(data = park_shapes, weight =0,
-              fillColor = "green",
+              fillColor = "#82c91e",
               fillOpacity = .4,
               # popup = ~popup,#lapply(labs, HTML),
               labelOptions = labelOptions(noHide = F,
@@ -288,22 +288,22 @@ m <- leaflet() %>%
   addCircleMarkers(data = play_areas %>% st_centroid(),
               # weight = 10,
               # label = 'park_name',
-              color = '#82C91E',
+              color = '#ff59bf',
               group = 'Play areas',
              fillOpacity = .8,
              stroke = FALSE,
              radius = 4,
              popup = ~popup)%>%
-  addCircleMarkers(data=bball_lat, group = 'Basketball courts', popup = ~popup, color= '#BE4BDB', fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4)%>%
+  addCircleMarkers(data=bball_lat, group = 'Basketball courts', popup = ~popup, color= '#d05d4e', fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4)%>%
   # addCircles(data=bocce, group = 'bocce', color= 'blue', fill = TRUE, fillOpacity = 1)%>%
   # addCircles(data=cricket_lat, group = 'cricket', color= 'pink', fill = TRUE, fillOpacity = 1)%>%
-  addCircleMarkers(data=handball_lat, group = 'Handball courts', color= '#228AE6', fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup)%>%
+  addCircleMarkers(data=handball_lat, group = 'Handball courts', color= '#ff9938', fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup)%>%
   # addCircles(data=tennis_lat, group = 'tennis', color= 'purple', fill = TRUE, fillOpacity = 1)%>%
-  addCircleMarkers(data=tracks_lat, group = 'Running tracks', color= '#12B886', fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup)%>%
+  addCircleMarkers(data=tracks_lat, group = 'Running tracks', color= '#960057', fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup)%>%
   addPolygons(data = bbq, color = "#F59F00", group = "Parks with BBQ facilities", fillOpacity = 1, stroke = FALSE, popup = ~popup) %>%
-  addCircleMarkers(data = concessions, color = "red", group = "Food service", fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup) %>%
-  addCircleMarkers(data = pools, color = "blue", group = "Pools", fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup) %>%
-  addPolygons(data = dogs, color = "brown", group = "Dog runs and off-leash areas", fillOpacity = 1, stroke = FALSE, popup = ~popup) %>%
+  addCircleMarkers(data = concessions, color = "#be4bdb", group = "Food service", fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup) %>%
+  addCircleMarkers(data = pools, color = "#228ae6", group = "Pools", fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup) %>%
+  addPolygons(data = dogs, color = "#a07952", group = "Dog runs and off-leash areas", fillOpacity = 1, stroke = FALSE, popup = ~popup) %>%
 
   addLayersControl(
     baseGroups = c('Basketball courts', 'Handball courts','Running tracks', 'Play areas', "Parks with BBQ facilities", "Food service", "Pools", "Dog runs and off-leash areas"),
