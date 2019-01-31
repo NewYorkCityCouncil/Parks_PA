@@ -11,8 +11,10 @@ library(rgeos)
 library(dplyr)
 library(tidyverse)
 library(htmltools)
+library(councildown)
 # library(geojsonsf)
 
+source(here::here("code", "util.R"))
 
 
 #creating all datasets and separating them out into subsets,
@@ -31,7 +33,7 @@ park_shapes<-park_shapes[keeps]
 
 
 basketball <- fromJSON('./data/original_data/DPR_Basketball_001.json') %>% as.data.frame()
-basketball <- basketball[c('Name','Accessible','lat','lon')]
+# basketball <- basketball[c('Name','Accessible','lat','lon')]
 basketball <-rename_all(basketball, function(x) paste0('bball_',x))
 basketball[71,'bball_lon'] <- -73.7922
 
@@ -46,53 +48,58 @@ bball_lat <- transform(bball_lat, bball_lat = as.numeric(bball_lat),
 bball_lat <- st_as_sf(bball_lat, coords = c("bball_lon", "bball_lat"), crs='+proj=longlat +datum=WGS84')
 st_crs(bball_lat) <- 4326
 bball_lat$bball_geo2 <- bball_lat$geometry
+bball_lat <- bball_lat %>%
+  mutate(bball_Accessible = case_when(bball_Accessible == "N" ~ "No",
+                                      bball_Accessible == "Y" ~ "Yes",
+                                      TRUE ~ NA_character_),
+         popup = pmap_chr(list(bball_Name, bball_Location, bball_Num_of_Courts, bball_Accessible),
+                          ~caption_template(header_template(..1, ..2), body_template(`Number of courts` = ..3, Accessible = ..4))))
+
+
+
+
+
+#
+#
+# bocce <- fromJSON('data/original_data/DPR_Bocce_001.json') %>% as.data.frame()
+# bocce <- bocce[c('Name','Accessible','lat','lon')]
+# #all bocce courts have lat and lon, therefore all may be spatially joined
+# bocce <- transform(bocce, lat = as.numeric(lat),
+#                   lon = as.numeric(lon))
+#
+# bocce <- st_as_sf(bocce, coords = c('lon','lat'))
+# bocce <-rename_all(bocce, function(x) paste0('bocce_',x))
+# st_crs(bocce) <- 4326
+#
+#
+#
 
 
 
 
 
 
-
-
-bocce <- fromJSON('data/original_data/DPR_Bocce_001.json') %>% as.data.frame()
-bocce <- bocce[c('Name','Accessible','lat','lon')]
-#all bocce courts have lat and lon, therefore all may be spatially joined
-bocce <- transform(bocce, lat = as.numeric(lat),
-                  lon = as.numeric(lon))
-
-bocce <- st_as_sf(bocce, coords = c('lon','lat'))
-bocce <-rename_all(bocce, function(x) paste0('bocce_',x))
-st_crs(bocce) <- 4326
-
-
-
-
-
-
-
-
-
-cricket <- fromJSON('data/original_data/DPR_Cricket_001.json') %>% as.data.frame()
-cricket <- cricket[c('Name','lat','lon')]
-cricket <-rename_all(cricket, function(x) paste0('crick_',x))
-
-cricket_nolat <- subset(cricket,is.na(crick_lat))
-cricket_nolat <- cricket_nolat[c('crick_Name')]
-cricket_nolat$name311 <- cricket_nolat$crick_Name
-cricket_lat <- subset(cricket,!is.na(crick_lat))
-
-cricket_lat <- transform(cricket_lat, crick_lat = as.numeric(crick_lat),
-                         crick_lon = as.numeric(crick_lon))
-cricket_lat <- st_as_sf(cricket_lat, coords = c('crick_lon','crick_lat'))
-st_crs(cricket_lat) <- 4326
-
+# cricket <- fromJSON('data/original_data/DPR_Cricket_001.json') %>% as.data.frame()
+# cricket <- cricket[c('Name','lat','lon')]
+# cricket <-rename_all(cricket, function(x) paste0('crick_',x))
+#
+# cricket_nolat <- subset(cricket,is.na(crick_lat))
+# cricket_nolat <- cricket_nolat[c('crick_Name')]
+# cricket_nolat$name311 <- cricket_nolat$crick_Name
+# cricket_lat <- subset(cricket,!is.na(crick_lat))
+#
+# cricket_lat <- transform(cricket_lat, crick_lat = as.numeric(crick_lat),
+#                          crick_lon = as.numeric(crick_lon))
+# cricket_lat <- st_as_sf(cricket_lat, coords = c('crick_lon','crick_lat'))
+# st_crs(cricket_lat) <- 4326
+#
 
 
 
 
 
 handball <- fromJSON('data/original_data/DPR_Handball_001.json') %>% as.data.frame()
-handball <- handball[c('Name','Num_of_Courts', 'lat','lon')]
+# handball <- handball[c('Name','Num_of_Courts', 'lat','lon')]
 handball <-rename_all(handball, function(x) paste0('handb_',x))
 
 handball_nolat <- subset(handball,is.na(handb_lat))
@@ -105,6 +112,10 @@ handball_lat <- transform(handball_lat, handb_lat = as.numeric(handb_lat),
 handball_lat <- st_as_sf(handball_lat, coords = c('handb_lon','handb_lat'))
 st_crs(handball_lat) <- 4326
 
+handball_lat <- handball_lat %>%
+  mutate(popup = pmap_chr(list(handb_Name, handb_Location, handb_Num_of_Courts),
+                          ~caption_template(header_template(..1, ..2), body_template(`Number of courts` = ..3))))
+
 
 indoor_pools <- fromJSON("data/original_data/DPR_Pools_indoor_001.json")
 outdoor_pools <- fromJSON("data/original_data/DPR_Pools_outdoor_001.json")
@@ -113,12 +124,19 @@ pools <- indoor_pools %>%
   bind_rows(outdoor_pools %>% rename(Type = Pools_outdoor_Type)) %>%
   mutate(lat = as.numeric(lat),
          lon = as.numeric(lon)) %>%
-  st_as_sf(coords = c("lon", "lat"), crs = "+proj=longlat +datum=WGS84")
+  st_as_sf(coords = c("lon", "lat"), crs = "+proj=longlat +datum=WGS84") %>%
+  mutate(Accessible = case_when(Accessible == "N" ~ "No",
+                                Accessible == "Y" ~ "Yes",
+                                TRUE ~ NA_character_),
+         popup = pmap_chr(list(Name, Location, Phone, Setting, Size, Accessible),
+                          ~caption_template(header_template(..1, ..2, ..3),
+                                            body_template(`Indoor/Outdoor` = ..4, Size = ..5, Accessible = ..6))))
+
 
 
 
 tracks <- fromJSON('data/original_data/DPR_RunningTracks_001.json') %>% as.data.frame()
-tracks <- tracks[c('Name','Size', 'RunningTracks_Type','lat','lon')]
+# tracks <- tracks[c('Name','Size', 'RunningTracks_Type','lat','lon')]
 tracks <-rename_all(tracks, function(x) paste0('tracks_',x))
 
 tracks_nolat <- subset(tracks,is.na(tracks_lat))
@@ -131,41 +149,50 @@ tracks_lat <- transform(tracks_lat, tracks_lat = as.numeric(tracks_lat),
 tracks_lat <- st_as_sf(tracks_lat, coords = c('tracks_lon','tracks_lat'))
 st_crs(tracks_lat) <- 4326
 
+tracks_lat <- tracks_lat %>%
+  mutate(popup = pmap_chr(list(tracks_Name, tracks_Location, tracks_RunningTracks_Type, tracks_Size),
+                          ~caption_template(header_template(..1, ..2), body_template(Type = ..3, Size = ..4))))
 
 
 
 
 
 
-
-tennis <- fromJSON('data/original_data/DPR_Tennis_001.json') %>% as.data.frame()
-tennis <- tennis[c('Name','Courts', 'Indoor_Outdoor', 'Accessible','lat','lon')]
-tennis <-rename_all(tennis, function(x) paste0('tennis_',x))
-tennis[73,'tennis_lon'] <- -73.7361
-
-
-tennis_nolat <- subset(tennis,is.na(tennis_lat))
-tennis_nolat <- tennis_nolat[c('tennis_Name','tennis_Courts', 'tennis_Indoor_Outdoor', 'tennis_Accessible')]
-tennis_nolat$name311 <- tennis_nolat$tennis_Name
-tennis_lat <- subset(tennis,!is.na(tennis_lat))
-
-tennis_lat <- transform(tennis_lat, tennis_lat = as.numeric(tennis_lat),
-                        tennis_lon = as.numeric(tennis_lon))
-tennis_lat <- st_as_sf(tennis_lat, coords = c('tennis_lon','tennis_lat'))
-st_crs(tennis_lat) <- 4326
-
+# tennis <- fromJSON('data/original_data/DPR_Tennis_001.json') %>% as.data.frame()
+# tennis <- tennis[c('Name','Courts', 'Indoor_Outdoor', 'Accessible','lat','lon')]
+# tennis <-rename_all(tennis, function(x) paste0('tennis_',x))
+# tennis[73,'tennis_lon'] <- -73.7361
+#
+#
+# tennis_nolat <- subset(tennis,is.na(tennis_lat))
+# tennis_nolat <- tennis_nolat[c('tennis_Name','tennis_Courts', 'tennis_Indoor_Outdoor', 'tennis_Accessible')]
+# tennis_nolat$name311 <- tennis_nolat$tennis_Name
+# tennis_lat <- subset(tennis,!is.na(tennis_lat))
+#
+# tennis_lat <- transform(tennis_lat, tennis_lat = as.numeric(tennis_lat),
+#                         tennis_lon = as.numeric(tennis_lon))
+# tennis_lat <- st_as_sf(tennis_lat, coords = c('tennis_lon','tennis_lat'))
+# st_crs(tennis_lat) <- 4326
+#
 
 
 play_areas <- st_read("data/original_data/Play Areas/geo_export_c03428b3-2818-41eb-a86b-e798978499a0.shp", stringsAsFactors = FALSE) %>%
   # st_transform("+proj=longlat +ellps=WGS84 +no_defs") %>%
   group_by(gispropnum, borough, park_name) %>%
-  summarize()
+  summarize() %>%
+  mutate(popup = map_chr(park_name, ~caption_template(header_template(.), body = NULL)))
 # st_crs(play_areas) <-4326
 
 
 bbq <- fromJSON('data/original_data/DPR_Barbecue_001.json') %>% as.data.frame()
-bbq <- bbq['Name']
-bbq$name311 <- bbq$Name
+# bbq <- bbq['Name']
+# bbq$name311 <- bbq$Name
+bbq <- bbq %>%
+  inner_join(park_shapes, by = c("Prop_ID" = "gispropnum")) %>%
+  st_as_sf() %>%
+  st_transform('+proj=longlat +datum=WGS84') %>%
+  mutate(popup = map_chr(Name, ~caption_template(header_template(.), body = NULL)))
+
 
 
 concessions_raw <- fromJSON("data/original_data/DPR_Concessions_001.json", flatten = TRUE)
@@ -180,40 +207,47 @@ concessions <- concessions_raw %>%
   unnest(locations.location) %>%
   rename_at(vars(contains(".")), ~str_split(., "\\.",simplify = TRUE)[, 2]) %>%
   mutate_at(vars(lat, lng), as.numeric) %>%
-  st_as_sf(coords = c("lng", "lat"), crs = '+proj=longlat +datum=WGS84')
+  st_as_sf(coords = c("lng", "lat"), crs = '+proj=longlat +datum=WGS84') %>%
+  mutate(popup = pmap_chr(list(name, type, website, phone, email, description),
+                          ~caption_template(header_template(..1, ..2, ..3, ..4, ..5), body_template(Description = ..6)))) %>%
+  identity()
 
 dogs <- fromJSON("data/original_data/DPR_DogRuns_001.json", flatten = TRUE) %>%
   # select(Name, DogRuns_Type) %>%
-  # mutate(dog_name = Name) %>%
   identity() %>%
   inner_join(park_shapes, by = c("Prop_ID" = "gispropnum")) %>%
   st_as_sf() %>%
-  st_transform('+proj=longlat +datum=WGS84')
+  st_transform('+proj=longlat +datum=WGS84') %>%
+  mutate(popup = pmap_chr(list(Name, Address, DogRuns_Type),
+                          ~caption_template(header_template(..1, ..2), body_template(Type = ..3))),
+         dog_name = Name)
 
 #separate dataframes into lists of frames to be spatially joined (for greatest accuracy)
 #and frames to be joined by attribute.
 
-dats_lats <- list(bball_lat,bocce,cricket_lat, handball_lat,tennis_lat,tracks_lat)
-dats_no_lats <- list(bball_nolat,bbq,cricket_nolat,handball_nolat, tennis_nolat, tracks_nolat)
+dats_lats <- list(bball_lat, handball_lat, tracks_lat, bbq)
+dats_no_lats <- list(bball_nolat, handball_nolat, tracks_nolat)
 
 
-parks <- reduce(.x=dats_lats, function(x,y) st_join(x %>% st_transform('+proj=longlat +datum=WGS84'),y  %>% st_transform('+proj=longlat +datum=WGS84'), left=TRUE),.init=park_shapes)
+parks <- reduce(.x=dats_lats, function(x,y) st_join(x %>% st_transform('+proj=longlat +datum=WGS84'),
+                                                    y %>% st_transform('+proj=longlat +datum=WGS84'),
+                                                    left=TRUE), .init = park_shapes)
 parks <- reduce(.x=dats_no_lats, function(x,y) left_join(x,y),.init = parks)
 
 #parks <- reduce(.x=dats_no_lats, function(x,y) left_join.sf(x,y, by= c('name311'='')),.init=parks)
 
 parks$basketball <- as.numeric(!is.na(parks$bball_Name))
-parks$bocce <- as.numeric(!is.na(parks$bocce_Name))
-parks$cricket <- as.numeric(!is.na(parks$crick_Name))
+# parks$bocce <- as.numeric(!is.na(parks$bocce_Name))
+# parks$cricket <- as.numeric(!is.na(parks$crick_Name))
 parks$handball <- as.numeric(!is.na(parks$handb_Name))
-parks$tennis <- as.numeric(!is.na(parks$tennis_Name))
+# parks$tennis <- as.numeric(!is.na(parks$tennis_Name))
 parks$tracks <- as.numeric(!is.na(parks$tracks_Name))
 parks$bbq <- as.numeric(!is.na(parks$Name))
-parks$dog <- as.numeric(!is.na(parks$dog_name))
+# parks$dog <- as.numeric(!is.na(parks$dog_name))
 
 drops <- c("bball_Name","bocce_Name",'crick_Name','handb_Name','tennis_Name', 'tracks_Name')
 parks <- parks[ , !(names(parks) %in% drops)]
-parks$label <- with(parks, paste(name311,bball_Accessible, sep = '\n'))
+# parks$label <- with(parks, paste(name311,bball_Accessible, sep = '\n'))
 parks$centroid <- st_transform(parks$geometry,4326) %>%
   st_centroid() %>%
   st_transform(., '+proj=longlat +datum=WGS84')%>%
@@ -239,38 +273,42 @@ labs <- lapply(seq(nrow(parks)),function(i) {
           parks[["tennis"]][i], '</p>' )
 })
 
-parks <- distinct(parks, name311, .keep_all = TRUE)
+parks <- distinct(parks, name311, .keep_all = TRUE) %>%
+  mutate(popup = map_chr(name311, ~caption_template(header_template(.), NULL)))
 
 m <- leaflet() %>%
-  addProviderTiles("CartoDB.Positron") %>%
-  addPolygons(data = parks, weight =0,
+  # addProviderTiles("CartoDB.Positron") %>%
+  addCouncilStyle(add_dists = FALSE) %>%
+  addPolygons(data = park_shapes, weight =0,
               fillColor = "green",
               fillOpacity = .4,
-              label = ~label,#lapply(labs, HTML),
+              # popup = ~popup,#lapply(labs, HTML),
               labelOptions = labelOptions(noHide = F,
                                           direction = 'auto')) %>%
   addCircleMarkers(data = play_areas %>% st_centroid(),
               # weight = 10,
-              label = 'park_name',
+              # label = 'park_name',
               color = '#82C91E',
-              group = 'play areas',
+              group = 'Play areas',
              fillOpacity = .8,
              stroke = FALSE,
-             radius = 4)%>%
-  addCircleMarkers(data=bball_lat, group = 'basketball', color= '#BE4BDB', fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4)%>%
+             radius = 4,
+             popup = ~popup)%>%
+  addCircleMarkers(data=bball_lat, group = 'Basketball courts', popup = ~popup, color= '#BE4BDB', fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4)%>%
   # addCircles(data=bocce, group = 'bocce', color= 'blue', fill = TRUE, fillOpacity = 1)%>%
   # addCircles(data=cricket_lat, group = 'cricket', color= 'pink', fill = TRUE, fillOpacity = 1)%>%
-  addCircleMarkers(data=handball_lat, group = 'handball', color= '#228AE6', fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4)%>%
+  addCircleMarkers(data=handball_lat, group = 'Handball courts', color= '#228AE6', fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup)%>%
   # addCircles(data=tennis_lat, group = 'tennis', color= 'purple', fill = TRUE, fillOpacity = 1)%>%
-  addCircleMarkers(data=tracks_lat, group = 'tracks', color= '#12B886', fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4)%>%
-  addPolygons(data = parks %>% filter(bbq == 1), color = "#F59F00", group = "BBQ", fillOpacity = 1, stroke = FALSE) %>%
-  addCircleMarkers(data = concessions, color = "red", group = "Food", fillOpacity = .8, stroke = FALSE, radius = 4) %>%
-  addCircleMarkers(data = pools, color = "blue", group = "pools", fillOpacity = .8, stroke = FALSE, radius = 4) %>%
-  addPolygons(data = dogs, color = "brown", group = "dog", fillOpacity = 1, stroke = FALSE) %>%
+  addCircleMarkers(data=tracks_lat, group = 'Running tracks', color= '#12B886', fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup)%>%
+  addPolygons(data = bbq, color = "#F59F00", group = "Parks with BBQ facilities", fillOpacity = 1, stroke = FALSE, popup = ~popup) %>%
+  addCircleMarkers(data = concessions, color = "red", group = "Food service", fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup) %>%
+  addCircleMarkers(data = pools, color = "blue", group = "Pools", fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup) %>%
+  addPolygons(data = dogs, color = "brown", group = "Dog runs and off-leash areas", fillOpacity = 1, stroke = FALSE, popup = ~popup) %>%
 
   addLayersControl(
-    baseGroups = c('basketball', 'handball','tracks', 'play areas', "BBQ", "Food", "pools", "dog"),
-    options = layersControlOptions(collapsed = FALSE)
+    baseGroups = c('Basketball courts', 'Handball courts','Running tracks', 'Play areas', "Parks with BBQ facilities", "Food service", "Pools", "Dog runs and off-leash areas"),
+    options = layersControlOptions(collapsed = FALSE),
+    position = "bottomright"
   ) %>%
   # addLegend("topleft", values = ~basketball,
   #           colors = c('red', 'blue', 'pink', 'green', 'purple', 'orange', 'black', "gray"),
@@ -278,6 +316,7 @@ m <- leaflet() %>%
   #           title = "test",
   #           opacity = 1
   # ) %>%
+  setView(-73.88099670410158,40.72540497175607,  zoom = 10.5) %>%
 identity()
 m
 
