@@ -1,6 +1,11 @@
 caption_template <- function(header, body) {
+  if (!is.null(body)) {
   paste(header, body, sep = "<hr>") %>%
     councilPopup()
+  } else {
+    header %>%
+      councilPopup()
+    }
 }
 
 
