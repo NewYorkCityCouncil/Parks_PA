@@ -8,9 +8,18 @@ library(lubridate)
 library(htmltools)
 library(htmlwidgets)
 library(testthat)
+library(gmailr)
 
+send_mail <- function() {
+  send_message(mime(from = "nyccdummyemail@gmail.com", to = "nsolomon@council.nyc.gov", subject = ":( Oh no", body = "Ya done goof'd!"))
+  q(status = 1)
+}
+
+options(error = send_mail)
 
 source(here::here("code", "util.R"))
+
+stop()
 
 events_raw <- fromJSON("https://www.nycgovparks.org/xml/events_300_rss.json") %>%
   # as_tibble() %>%
@@ -45,7 +54,7 @@ make_caption <- function(dat) {
 }
 
 expect_is(events_raw, "data.frame", info = "Raw event data is not a data frame.")
-expect_gt(nrow(events_raw), 0, info = "No event data downloaded")
+expect_gt(nrow(events_raw), 0)
 expect_is(events_raw$description, "character", info = "Description is not text data")
 expect_is(events_raw$coordinates, "character", info = "Coordinates are not text data")
 expect_equal(sum(is.na(events_raw$coordinates)), 0, info = "Missing coordinates")
@@ -96,3 +105,4 @@ move2 <- file.rename("events_map_files", "results/events_map_files")
 expect_equal(delete, 0, info = "Could not delete old JS dependencies")
 expect_true(move1, info = "Could not move events_map.html to results/")
 expect_true(move2, info = "Could not move events_map_files/ to results/")
+
