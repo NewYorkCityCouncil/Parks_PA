@@ -20,6 +20,8 @@ options(error = send_mail)
 
 source(here::here("code", "util.R"))
 
+updated_at <- list(time = Sys.time())
+
 events_raw <- fromJSON("https://www.nycgovparks.org/xml/events_300_rss.json") %>%
   # as_tibble() %>%
   # mutate(coords = map(coordinates, ~as_tibble(str_split(., ";", simplify = TRUE))),
@@ -105,3 +107,4 @@ expect_equal(delete, 0, info = "Could not delete old JS dependencies")
 expect_true(move1, info = "Could not move events_map.html to results/")
 expect_true(move2, info = "Could not move events_map_files/ to results/")
 
+write_json(updated_at, "results/update_time.json")
