@@ -2,6 +2,8 @@ set -e
 
 cd Parks_PA
 
+export GIT_SSH_COMMAND='ssh -i ~/.ssh/parks_deploy'
+
 git checkout gh-pages
 
 Rscript code/events.R
