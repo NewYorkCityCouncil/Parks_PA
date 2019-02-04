@@ -15,11 +15,10 @@ send_mail <- function() {
   q(status = 1)
 }
 
+
 options(error = send_mail)
 
 source(here::here("code", "util.R"))
-
-stop()
 
 events_raw <- fromJSON("https://www.nycgovparks.org/xml/events_300_rss.json") %>%
   # as_tibble() %>%
@@ -47,7 +46,7 @@ events_raw <- fromJSON("https://www.nycgovparks.org/xml/events_300_rss.json") %>
 
 make_caption <- function(dat) {
   dat <- dat %>%
-    # Order by date
+    arrange(start) %>% 
     mutate(cap = paste("<h4>", title, "</h4>", description))
   out <- paste(dat$cap, collapse = "<hr>")
   out
@@ -62,10 +61,10 @@ expect_equal(sum(is.na(events_raw$description)), 0, info = "Missing descriptions
 
 
 events <- events_raw %>%
-  # unite(start, starts_with("start"), sep = " ") %>%
-  # unite(end, starts_with("end"), sep = "") %>%
-  # mutate(start = ymd_hm(start),
-  #        end = ymd_hm(end)) %>%
+  unite(start, starts_with("start"), sep = " ") %>%
+  unite(end, starts_with("end"), sep = "") %>%
+  mutate(start = ymd_hm(start),
+         end = ymd_hm(end)) %>%
   group_by(coordinates) %>%
   nest() %>%
   mutate(caption = map_chr(data, make_caption)) %>%
