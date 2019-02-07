@@ -64,7 +64,7 @@ maint$work_order_total <- maint$wo_total_FY18_Q1 +
 maint$wo_total_parks_maint_cost <-  maint$daily_cost_year + maint$work_order_total
 
 #calculate annual maintenance cost per acre
-maint$cost_per_acre <- round(maint$wo_total_parks_maint_cost/as.numeric(maint$functional_acreage),2)
+maint$cost_per_acre <- round(maint$wo_total_parks_maint_cost/as.numeric(maint$total_acreage),2)
 
 #read in sf file
 #remove extra columns
