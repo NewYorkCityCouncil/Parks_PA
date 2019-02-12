@@ -1,4 +1,3 @@
-library(tidyverse)
 library(sf)
 library(leaflet)
 
@@ -11,6 +10,11 @@ library(hablar)
 library(rgdal)
 library(rgeos)
 library(dplyr)
+library(tidyverse)
+library(htmlwidgets)
+library(htmltools)
+
+source("code/util.R")
 
 # IMPORTANT:
 #   cost_FY18_Q..: Calculated from Daily Tasks, the average sum of hours spent servicing a park
@@ -80,57 +84,156 @@ park_shapes_maint <- park_shapes_maint %>% setnames(old = 'gispropnum', new = 'n
 #join files
 park_maint <- left_join(maint, park_shapes_maint)
 
-#convert df to sf
+# #convert df to sf
 park_maint <- st_as_sf(park_maint)
-# st_transform(park_maint, 4326)
+# # st_transform(park_maint, 4326)
+#
+# #set a palette
+# pal <- colorNumeric(
+#   palette = "Reds",
+#   domain = log(park_maint$cost_per_acre+ .000001))
+#
+# str(park_maint$cost_per_acre)
+#
+# #name, cost column
+# park_maint$label <- paste(park_maint$sign_name, park_maint$cost_per_acre, sep = ' ', collaple = '')
+#
+# #set up leaflet map
+# maint_map <- leaflet(park_maint) %>%
+#   addProviderTiles("CartoDB.Positron") %>%
+#   addPolygons(weight =1,
+#               color = ~pal(log(cost_per_acre + .000001)),
+#               stroke = FALSE,
+#               smoothFactor = .2,
+#               fillOpacity = 1,
+#               label = ~label,
+#               labelOptions = labelOptions(noHide = F,
+#                                           direction = 'auto')) %>%
+#   addLegend(pal = pal, values = ~log(cost_per_acre + .000001), position = "bottomright",
+#             title = " Log cost per acre")
+# maint_map
+# labFormat = labelFormat(prefix = "$", transform = function(x) exp(x) - .000001)
+# hist(park_maint$cost_per_acre, breaks = 100)
+#
+# summary(park_maint$cost_per_acre)
+#
+# pal2 <- colorNumeric("Reds", domain = log(maint$wo_total_parks_maint_cost + .000001))
+#
+# maint_map2 <- leaflet(park_maint) %>%
+#   addProviderTiles("CartoDB.Positron") %>%
+#   addPolygons(weight =1,
+#               color = ~pal2(log(wo_total_parks_maint_cost + .000001)),
+#               stroke = FALSE,
+#               smoothFactor = .2,
+#               fillOpacity = 1,
+#               label = ~paste(sign_name, ": $", wo_total_parks_maint_cost, sep = ""),
+#               labelOptions = labelOptions(noHide = F,
+#                                           direction = 'auto')) %>%
+#   addLegend(pal = pal2, values = ~log(wo_total_parks_maint_cost + .000001), position = "bottomright",
+#             title = "Log cost")
+# maint_map2
+#
+# library(councildown)
+# options(scipen = 9999)
+# ggplot(park_maint, aes(cost_per_acre)) +
+#   geom_histogram() +
+#   scale_x_log10(labels = scales::dollar_format())
+#
 
-#set a palette
-pal <- colorNumeric(
-  palette = "Reds",
-  domain = log(park_maint$cost_per_acre+ .000001))
+library(readxl)
 
-str(park_maint$cost_per_acre)
+other_funding1 <- read_excel("data/original_data/Int 0384-2014 - Report FY18 - DRAFT - 11-01-18 v3.xls", sheet = 1, skip = 5) %>%
+  janitor::clean_names()
+other_funding2 <- read_excel("data/original_data/Int 0384-2014 - Report FY18 - DRAFT - 11-01-18 v3.xls", sheet = 2, skip = 5) %>%
+  janitor::clean_names()
 
-#name, cost column
-park_maint$label <- paste(park_maint$sign_name, park_maint$cost_per_acre, sep = ' ', collaple = '')
 
-#set up leaflet map
-maint_map <- leaflet(park_maint) %>%
-  addProviderTiles("CartoDB.Positron") %>%
-  addPolygons(weight =1,
-              color = ~pal(log(cost_per_acre + .000001)),
-              stroke = FALSE,
-              smoothFactor = .2,
-              fillOpacity = 1,
-              label = ~label,
-              labelOptions = labelOptions(noHide = F,
-                                          direction = 'auto')) %>%
-  addLegend(pal = pal, values = ~log(cost_per_acre + .000001), position = "bottomright",
-            title = " Log cost per acre")
-maint_map
-labFormat = labelFormat(prefix = "$", transform = function(x) exp(x) - .000001)
-hist(park_maint$cost_per_acre, breaks = 100)
+glimpse(other_funding1)
+glimpse(other_funding2)
 
-summary(park_maint$cost_per_acre)
+to_join <- other_funding1 %>%
+  select(park = park_location, funding_amount = maintenance_and_operations) %>%
+  bind_rows(other_funding2 %>% select(park, funding_amount)) %>%
+  group_by(park) %>%
+  summarize(funding_amount = sum(funding_amount))
 
-pal2 <- colorNumeric("Reds", domain = log(maint$wo_total_parks_maint_cost + .000001))
+test <- to_join %>%
+  inner_join(park_shapes_maint, by = c("park" = "signname"))
+lost <- to_join %>%
+  anti_join(park_shapes_maint, by = c("park" = "signname"))
 
-maint_map2 <- leaflet(park_maint) %>%
-  addProviderTiles("CartoDB.Positron") %>%
-  addPolygons(weight =1,
-              color = ~pal2(log(wo_total_parks_maint_cost + .000001)),
-              stroke = FALSE,
-              smoothFactor = .2,
-              fillOpacity = 1,
-              label = ~paste(sign_name, ": $", wo_total_parks_maint_cost, sep = ""),
-              labelOptions = labelOptions(noHide = F,
-                                          direction = 'auto')) %>%
-  addLegend(pal = pal2, values = ~log(wo_total_parks_maint_cost + .000001), position = "bottomright",
-            title = "Log cost")
-maint_map2
+lost_recoded <- read_csv("lost_funding.csv")
 
-library(councildown)
-options(scipen = 9999)
-ggplot(park_maint, aes(cost_per_acre)) +
-  geom_histogram() +
-  scale_x_log10(labels = scales::dollar_format())
+to_join <- to_join %>%
+  left_join(lost_recoded, by = "park") %>%
+  mutate(park = ifelse(!is.na(new_name), new_name, park)) %>%
+  group_by(park) %>%
+  summarize(funding_amount = sum(funding_amount.x))
+
+make_popup <- function(name, maint_funding, priv_funding, acreage, amenities) {
+  name_out <- tags$h4(name)
+
+  if(is.na(maint_funding)) {
+    maint_funding_out <- NULL
+  } else {
+    maint_funding_out <- paste0(tags$strong("Maintenance funding"), ": ",
+                                scales::dollar_format()(maint_funding), tags$br())
+  }
+
+  if(is.na(priv_funding)) {
+    priv_funding_out <- NULL
+  } else {
+    priv_funding_out <- paste0(tags$strong("Private funding"), ": ",
+                               scales::dollar_format()(priv_funding), tags$br())
+  }
+
+  if(is.na(acreage)) {
+    acreage_out <- NULL
+  } else {
+    acreage_out <- paste0(tags$strong("Acreage"), ": ",
+           format(acreage, big.mark = ","), tags$br())
+  }
+
+  if(is.na(amenities)) {
+    amenities_out <- NULL
+  } else {
+    amenities <- strsplit(amenities, ",\\s*") %>%
+      .[[1]] %>%
+      str_trim() %>%
+      paste(collapse = ", ")
+
+    amenities_out <- paste0(tags$strong("Amenities"), ": ",
+           amenities, tags$br())
+  }
+
+  out <- paste0(name_out, tags$hr(),
+                maint_funding_out,
+                priv_funding_out,
+                acreage_out,
+                amenities_out) %>%
+    councilPopup()
+
+}
+
+park_maint_cons <- park_maint %>%
+  left_join(to_join, by = c("signname" = "park")) %>%
+  mutate_if(is.factor, as.character) %>%
+  select(signname, wo_total_parks_maint_cost, funding_amount, total_acreage, site_amenities) %>%
+  mutate(popup = pmap_chr(list(signname, wo_total_parks_maint_cost, funding_amount, total_acreage, site_amenities),
+                      make_popup))
+
+funding_map <- park_maint_cons %>%
+  st_transform("+proj=longlat +datum=WGS84") %>%
+  leaflet() %>%
+  addCouncilStyle() %>%
+  addPolygons(weight = 0, fillColor = "#82c91e", fillOpacity = .4, popup = ~popup) %>%
+  setView(-73.88099670410158,40.72540497175607,  zoom = 10.5) %>%
+  registerPlugin(geocoder) %>%
+  # registerPlugin(fontawsome_markers) %>%
+  onRender(geocode_js, data = list(key = Sys.getenv("GEOCODE_API_KEY")))
+
+
+htmlwidgets::saveWidget(funding_map, file = "funding_map.html", selfcontained = FALSE)
+unlink(here::here("results", "funding_map_files"), recursive = TRUE)
+file.rename("funding_map.html", "results/funding_map.html")
+file.rename("funding_map_files", "results/funding_map_files")
