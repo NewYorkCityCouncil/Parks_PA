@@ -309,19 +309,19 @@ m <- leaflet() %>%
   addCircleMarkers(data = play_areas %>% st_centroid() %>% st_transform(crs_string),
               # weight = 10,
               # label = 'park_name',
-              color = unname(colors['Play areas']),
+              fillColor = unname(colors['Play areas']),
               group = unname(labels['Play areas']),
              fillOpacity = .8,
-             stroke = FALSE,
+             stroke = 30, color = "#00000000",
              radius = 4,
              popup = ~popup)%>%
-  addCircleMarkers(data=bball_lat, group = unname(labels['Basketball courts']), popup = ~popup, color= unname(colors["Basketball courts"]), fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4)%>%
-  addCircleMarkers(data=handball_lat, group = unname(labels['Handball courts']), color= unname(colors['Handball courts']), fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup)%>%
-  addCircleMarkers(data=tracks_lat, group = unname(labels['Running tracks']), color= unname(colors['Running tracks']), fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup)%>%
-  addPolygons(data = bbq, color = unname(colors["Parks with BBQ facilities"]), group = unname(labels["Parks with BBQ facilities"]), fillOpacity = 1, stroke = FALSE, popup = ~popup) %>%
-  addCircleMarkers(data = concessions, color = unname(colors["Food service"]), group = unname(labels["Food service"]), fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup) %>%
-  addCircleMarkers(data = pools, color = unname(colors["Pools"]), group = unname(labels["Pools"]), fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup) %>%
-  addPolygons(data = dogs, color = unname(colors["Dog runs and off-leash areas"]), group =  unname(labels["Dog runs and off-leash areas"]), fillOpacity = 1, stroke = FALSE, popup = ~popup) %>%
+  addCircleMarkers(data=bball_lat, group = unname(labels['Basketball courts']), popup = ~popup, fillColor= unname(colors["Basketball courts"]), fill = TRUE, fillOpacity = .8, stroke = 30, color = "#00000000", radius = 4)%>%
+  addCircleMarkers(data=handball_lat, group = unname(labels['Handball courts']), fillColor= unname(colors['Handball courts']), fill = TRUE, fillOpacity = .8, stroke = 30, color = "#00000000", radius = 4, popup = ~popup)%>%
+  addCircleMarkers(data=tracks_lat, group = unname(labels['Running tracks']), fillColor= unname(colors['Running tracks']), fill = TRUE, fillOpacity = .8, stroke = 30, color = "#00000000", radius = 4, popup = ~popup)%>%
+  addPolygons(data = bbq, fillColor = unname(colors["Parks with BBQ facilities"]), group = unname(labels["Parks with BBQ facilities"]), fillOpacity = 1, stroke = FALSE, popup = ~popup) %>%
+  addCircleMarkers(data = concessions, fillColor = unname(colors["Food service"]), group = unname(labels["Food service"]), fillOpacity = .8, stroke = 30, color = "#00000000", radius = 4, popup = ~popup) %>%
+  addCircleMarkers(data = pools, fillColor = unname(colors["Pools"]), group = unname(labels["Pools"]), fillOpacity = .8, stroke = 30, color = "#00000000", radius = 4, popup = ~popup) %>%
+  addPolygons(data = dogs, fillColor = unname(colors["Dog runs and off-leash areas"]), group =  unname(labels["Dog runs and off-leash areas"]), fillOpacity = 1, stroke = FALSE, popup = ~popup) %>%
   addLayersControl(
     baseGroups = unname(labels),
     options = layersControlOptions(collapsed = FALSE),

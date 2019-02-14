@@ -84,9 +84,10 @@ expect_equal(sum(is.na(events$caption)), 0, info = "Missing captions")
 events_map <- leaflet(events) %>%
   addCouncilStyle() %>%
   addCircleMarkers(radius = 4,
-                   color = "#F59F00",
+                   fillColor = "#F59F00",
                    popup = ~councilPopup(caption), popupOptions = popupOptions(maxHeight = 250), fillOpacity = .8,
-                   stroke = FALSE) %>%
+                   stroke = 30,
+                   color = "#00000000") %>%
   setView(-73.88099670410158,40.72540497175607,  zoom = 10.5)%>%
   registerPlugin(geocoder) %>%
   # registerPlugin(fontawsome_markers) %>%

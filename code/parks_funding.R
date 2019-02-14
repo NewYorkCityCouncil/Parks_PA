@@ -250,24 +250,27 @@ to_map <- park_maint_cons %>%
   mutate(total_acreage = parse_number(total_acreage),
          city_per_acre = wo_total_parks_maint_cost/total_acreage,
          private_per_acre = funding_amount/total_acreage,
-         total_per_acre = safe_add(wo_total_parks_maint_cost, funding_amount)/total_acreage) %>%
+         total_per_acre = safe_add(wo_total_parks_maint_cost, funding_amount)/total_acreage,
+         total = safe_add(wo_total_parks_maint_cost, funding_amount)) %>%
   filter(total_acreage != 0)
 
 
 
-pal <- colorNumeric("PRGn", domain = c(to_map$total_per_acre, to_map$private_per_acre, to_map$city_per_acre))
+pal <- colorNumeric("PRGn", domain = to_map$total)
 
 to_map %>%
   st_transform("+proj=longlat +datum=WGS84") %>%
   leaflet() %>%
   addCouncilStyle() %>%
-  addPolygons(color = ~pal(total_per_acre), group = "Total", stroke = FALSE, fillOpacity = .8) %>%
-  addPolygons(color = ~pal(city_per_acre), group = "City", stroke = FALSE, fillOpacity = .8) %>%
-  addPolygons(color = ~pal(private_per_acre), group = "Private", stroke = FALSE, fillOpacity = .8) %>%
-  addLegend(pal = pal, values = ~c(total_per_acre, city_per_acre, private_per_acre),
+  # addPolygons(color = ~pal(total_per_acre), group = "Total", stroke = FALSE, fillOpacity = .8) %>%
+  # addPolygons(color = ~pal(city_per_acre), group = "City", stroke = FALSE, fillOpacity = .8) %>%
+  # addPolygons(color = ~pal(private_per_acre), group = "Private", stroke = FALSE, fillOpacity = .8) %>%
+  addPolygons(color = ~pal(total), stroke = FALSE, fillOpacity = .8) %>%
+  addLegend(pal = pal, values = ~total,
             title = "Funding",
             position = "bottomright") %>%
-  addLayersControl(baseGroups = c("Total", "Private", "City"))
+  # addLayersControl(baseGroups = c("Total", "Private", "City")) %>%
+  identity()
 
 to_map %>%
   gather(type, amount, ends_with("per_acre")) %>%
