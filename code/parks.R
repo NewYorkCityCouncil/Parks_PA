@@ -345,10 +345,23 @@ unlink(here::here("results", "facilities_map_files"), recursive = TRUE)
 file.rename("facilities_map.html", "results/facilities_map.html")
 file.rename("facilities_map_files", "results/facilities_map_files")
 
+library(ggmap)
+register_google(Sys.getenv("GEOCODE_API_KEY"))
 
-# st_read("data/original_data/Play Areas/geo_export_c03428b3-2818-41eb-a86b-e798978499a0.shp", stringsAsFactors = FALSE) %>%
-#   as_tibble() %>%
-#   glimpse()
+
+playgrounds <- play_areas %>%
+  ungroup() %>%
+  mutate(lon = (st_centroid(.) %>% st_coordinates())[,1],
+         lat = (st_centroid(.) %>% st_coordinates())[,2]) %>%
+  as_tibble() %>%
+  drop_na(lat, lon) %>%
+  mutate(rev_geocode = map2(lon, lat, ~revgeocode(c(.x, .y))))
+
+playgrounds %>%
+  mutate(rev_geocode = as.character(rev_geocode)) %>%
+  select(Name = park_name, Location = rev_geocode) %>%
+  write_json("results/data_files/playgrounds.json")
+
 bball_lat %>%
   as_tibble() %>%
   select(Name = bball_Name, Location = bball_Location, `Number of courts` = bball_Num_of_Courts) %>%
