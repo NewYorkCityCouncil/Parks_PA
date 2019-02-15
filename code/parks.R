@@ -346,6 +346,38 @@ file.rename("facilities_map.html", "results/facilities_map.html")
 file.rename("facilities_map_files", "results/facilities_map_files")
 
 
+# st_read("data/original_data/Play Areas/geo_export_c03428b3-2818-41eb-a86b-e798978499a0.shp", stringsAsFactors = FALSE) %>%
+#   as_tibble() %>%
+#   glimpse()
+bball_lat %>%
+  as_tibble() %>%
+  select(Name = bball_Name, Location = bball_Location, `Number of courts` = bball_Num_of_Courts) %>%
+  write_json("results/data_files/bball.json")
+handball_lat %>%
+  as_tibble() %>%
+  select(Name = handb_Name, Location = handb_Location, `Number of courts` = handb_Num_of_Courts) %>%
+  write_json("results/data_files/handball.json")
+tracks_lat %>%
+  as_data_frame() %>%
+  select(Name = tracks_Name, Location = tracks_Location, Size = tracks_Size, `Surface type` = tracks_RunningTracks_Type) %>%
+  write_json("results/data_files/tracks.json")
+bbq %>%
+  as_data_frame() %>%
+  select(Name, Location) %>%
+  write_json("results/data_files/bbq.json")
+concessions %>%
+  as_data_frame() %>%
+  select(Name = name, Location = location, Type = type, Website = website, Phone = phone, Email = email) %>%
+  write_json("results/data_files/concessions.json")
+pools %>%
+  as_data_frame() %>%
+  select(Name, Location, Phone, Setting, Accessible) %>%
+  write_json("results/data_files/pools.json")
+dogs %>%
+  as_data_frame() %>%
+  select(Name, Address, Type = DogRuns_Type, Accessible) %>%
+  write_json("results/data_files/dogs.json")
+
 
 #
 # parks[duplicated(parks$geometry),] %>%
