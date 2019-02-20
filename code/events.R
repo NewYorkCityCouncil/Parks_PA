@@ -10,11 +10,11 @@ library(htmlwidgets)
 library(testthat)
 library(gmailr)
 
-send_mail <- function() {
-  send_message(mime(from = "nyccdummyemail@gmail.com", to = "nsolomon@council.nyc.gov", subject = ":( Oh no", body = "Ya done goof'd!"))
-  q(status = 1)
-}
-
+# send_mail <- function() {
+#   send_message(mime(from = "nyccdummyemail@gmail.com", to = "nsolomon@council.nyc.gov", subject = ":( Oh no", body = "Ya done goof'd!"))
+#   q(status = 1)
+# }
+#
 
 options(error = send_mail)
 
@@ -116,3 +116,4 @@ expect_gt(num_events[[1]], 0)
 
 write_json(num_events, "results/num_events.json")
 write_json(updated_at, "results/update_time.json")
+write_json(events_raw, "results/data_files/events.json")
