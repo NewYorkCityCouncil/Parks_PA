@@ -122,7 +122,7 @@ events_out <- events_raw %>%
   unite(end, starts_with("end"), sep = "") %>%
   mutate(start = ymd_hm(start),
          end = ymd_hm(end),
-         pretty_time = format(start, format = "$b %d %I:%M %p")) %>%
+         pretty_time = format(start, format = "%b %d %I:%M %p")) %>%
   arrange(start) %>%
   head(5)
 
