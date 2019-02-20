@@ -116,4 +116,11 @@ expect_gt(num_events[[1]], 0)
 
 write_json(num_events, "results/num_events.json")
 write_json(updated_at, "results/update_time.json")
-write_json(events_raw %>% arrange(starttime) %>% head(5), "results/data_files/events.json")
+
+events_out <- events_raw %>%
+  unite(start, starts_with("start"), sep = " ") %>%
+  unite(end, starts_with("end"), sep = "") %>%
+  mutate(start = ymd_hm(start),
+         end = ymd_hm(end))
+
+write_json(events_raw %>% arrange(startdate, starttime) %>% head(5), "results/data_files/events.json")
