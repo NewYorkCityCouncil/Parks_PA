@@ -121,6 +121,9 @@ events_out <- events_raw %>%
   unite(start, starts_with("start"), sep = " ") %>%
   unite(end, starts_with("end"), sep = "") %>%
   mutate(start = ymd_hm(start),
-         end = ymd_hm(end))
+         end = ymd_hm(end),
+         pretty_time = format(start, format = "$b %d %I:%M %p")) %>%
+  arrange(start) %>%
+  head(5)
 
-write_json(events_raw %>% arrange(startdate, starttime) %>% head(5), "results/data_files/events.json")
+write_json(events_out, "results/data_files/events.json")
