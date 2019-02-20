@@ -116,4 +116,4 @@ expect_gt(num_events[[1]], 0)
 
 write_json(num_events, "results/num_events.json")
 write_json(updated_at, "results/update_time.json")
-write_json(events_raw, "results/data_files/events.json")
+write_json(events_raw %>% arrange(starttime) %>% head(5), "results/data_files/events.json")
