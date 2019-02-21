@@ -23,6 +23,11 @@ source(here::here("code", "util.R"))
 updated_at <- list(time = Sys.time())
 
 events_raw <- fromJSON("https://www.nycgovparks.org/xml/events_300_rss.json") %>%
+  unite(start, starts_with("start"), sep = " ") %>%
+  unite(end, starts_with("end"), sep = "") %>%
+  mutate(start = ymd_hm(start),
+         end = ymd_hm(end)) %>%
+  filter(start > Sys.Date()) %>%
   # as_tibble() %>%
   # mutate(coords = map(coordinates, ~as_tibble(str_split(., ";", simplify = TRUE))),
   #        coords = map(coords, ~separate(., 1, c("lat", "lng"), sep = ", ", convert = TRUE))) %>%
@@ -63,11 +68,6 @@ expect_equal(sum(is.na(events_raw$description)), 0, info = "Missing descriptions
 
 
 events <- events_raw %>%
-  unite(start, starts_with("start"), sep = " ") %>%
-  unite(end, starts_with("end"), sep = "") %>%
-  mutate(start = ymd_hm(start),
-         end = ymd_hm(end)) %>%
-  filter(start > Sys.Date()) %>%
   group_by(coordinates) %>%
   nest() %>%
   mutate(caption = map_chr(data, make_caption)) %>%
