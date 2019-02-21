@@ -12,9 +12,10 @@ git checkout master
 Rscript code/events.R
 
 git commit -am "Update map"
-git checkout gh-pages
-git merge master --ff-only
-git checkout master
+
+# git checkout gh-pages
+git rebase gh-pages
+# git checkout master
 git push --all
 
 echo 'Done'
