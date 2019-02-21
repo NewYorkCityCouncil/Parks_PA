@@ -67,12 +67,13 @@ bbox.getSouthWest()
 ]);
 map.fitBounds(poly.getBounds());
 
+
 if (marker) {
 marker.setLatLng(e.geocode.center);
 } else {
 marker = L.circleMarker(e.geocode.center, {weight: 1, fillOpacity: .5}).addTo(map);
 }
-
+map.setZoom(16);
 
 })
 .addTo(this);

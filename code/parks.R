@@ -309,19 +309,19 @@ m <- leaflet() %>%
   addCircleMarkers(data = play_areas %>% st_centroid() %>% st_transform(crs_string),
               # weight = 10,
               # label = 'park_name',
-              color = unname(colors['Play areas']),
+              fillColor = unname(colors['Play areas']),
               group = unname(labels['Play areas']),
              fillOpacity = .8,
-             stroke = FALSE,
+             stroke = 30, color = "#00000000",
              radius = 4,
              popup = ~popup)%>%
-  addCircleMarkers(data=bball_lat, group = unname(labels['Basketball courts']), popup = ~popup, color= unname(colors["Basketball courts"]), fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4)%>%
-  addCircleMarkers(data=handball_lat, group = unname(labels['Handball courts']), color= unname(colors['Handball courts']), fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup)%>%
-  addCircleMarkers(data=tracks_lat, group = unname(labels['Running tracks']), color= unname(colors['Running tracks']), fill = TRUE, fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup)%>%
-  addPolygons(data = bbq, color = unname(colors["Parks with BBQ facilities"]), group = unname(labels["Parks with BBQ facilities"]), fillOpacity = 1, stroke = FALSE, popup = ~popup) %>%
-  addCircleMarkers(data = concessions, color = unname(colors["Food service"]), group = unname(labels["Food service"]), fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup) %>%
-  addCircleMarkers(data = pools, color = unname(colors["Pools"]), group = unname(labels["Pools"]), fillOpacity = .8, stroke = FALSE, radius = 4, popup = ~popup) %>%
-  addPolygons(data = dogs, color = unname(colors["Dog runs and off-leash areas"]), group =  unname(labels["Dog runs and off-leash areas"]), fillOpacity = 1, stroke = FALSE, popup = ~popup) %>%
+  addCircleMarkers(data=bball_lat, group = unname(labels['Basketball courts']), popup = ~popup, fillColor= unname(colors["Basketball courts"]), fill = TRUE, fillOpacity = .8, stroke = 30, color = "#00000000", radius = 4)%>%
+  addCircleMarkers(data=handball_lat, group = unname(labels['Handball courts']), fillColor= unname(colors['Handball courts']), fill = TRUE, fillOpacity = .8, stroke = 30, color = "#00000000", radius = 4, popup = ~popup)%>%
+  addCircleMarkers(data=tracks_lat, group = unname(labels['Running tracks']), fillColor= unname(colors['Running tracks']), fill = TRUE, fillOpacity = .8, stroke = 30, color = "#00000000", radius = 4, popup = ~popup)%>%
+  addPolygons(data = bbq, fillColor = unname(colors["Parks with BBQ facilities"]), group = unname(labels["Parks with BBQ facilities"]), fillOpacity = 1, stroke = FALSE, popup = ~popup) %>%
+  addCircleMarkers(data = concessions, fillColor = unname(colors["Food service"]), group = unname(labels["Food service"]), fillOpacity = .8, stroke = 30, color = "#00000000", radius = 4, popup = ~popup) %>%
+  addCircleMarkers(data = pools, fillColor = unname(colors["Pools"]), group = unname(labels["Pools"]), fillOpacity = .8, stroke = 30, color = "#00000000", radius = 4, popup = ~popup) %>%
+  addPolygons(data = dogs, fillColor = unname(colors["Dog runs and off-leash areas"]), group =  unname(labels["Dog runs and off-leash areas"]), fillOpacity = 1, stroke = FALSE, popup = ~popup) %>%
   addLayersControl(
     baseGroups = unname(labels),
     options = layersControlOptions(collapsed = FALSE),
@@ -345,6 +345,51 @@ unlink(here::here("results", "facilities_map_files"), recursive = TRUE)
 file.rename("facilities_map.html", "results/facilities_map.html")
 file.rename("facilities_map_files", "results/facilities_map_files")
 
+library(ggmap)
+register_google(Sys.getenv("GEOCODE_API_KEY"))
+
+
+playgrounds <- play_areas %>%
+  ungroup() %>%
+  mutate(lon = (st_centroid(.) %>% st_coordinates())[,1],
+         lat = (st_centroid(.) %>% st_coordinates())[,2]) %>%
+  as_tibble() %>%
+  drop_na(lat, lon) %>%
+  mutate(rev_geocode = map2(lon, lat, ~revgeocode(c(.x, .y))))
+
+playgrounds %>%
+  mutate(rev_geocode = as.character(rev_geocode)) %>%
+  select(Name = park_name, Location = rev_geocode) %>%
+  write_json("results/data_files/playgrounds.json")
+
+bball_lat %>%
+  as_tibble() %>%
+  select(Name = bball_Name, Location = bball_Location, `Number of courts` = bball_Num_of_Courts) %>%
+  write_json("results/data_files/bball.json")
+handball_lat %>%
+  as_tibble() %>%
+  select(Name = handb_Name, Location = handb_Location, `Number of courts` = handb_Num_of_Courts) %>%
+  write_json("results/data_files/handball.json")
+tracks_lat %>%
+  as_data_frame() %>%
+  select(Name = tracks_Name, Location = tracks_Location, Size = tracks_Size, `Surface type` = tracks_RunningTracks_Type) %>%
+  write_json("results/data_files/tracks.json")
+bbq %>%
+  as_data_frame() %>%
+  select(Name, Location) %>%
+  write_json("results/data_files/bbq.json")
+concessions %>%
+  as_data_frame() %>%
+  select(Name = name, Location = location, Type = type, Website = website, Phone = phone, Email = email) %>%
+  write_json("results/data_files/concessions.json")
+pools %>%
+  as_data_frame() %>%
+  select(Name, Location, Phone, Setting, Accessible) %>%
+  write_json("results/data_files/pools.json")
+dogs %>%
+  as_data_frame() %>%
+  select(Name, Address, Type = DogRuns_Type, Accessible) %>%
+  write_json("results/data_files/dogs.json")
 
 
 #

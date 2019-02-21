@@ -48,7 +48,7 @@ events_raw <- fromJSON("https://www.nycgovparks.org/xml/events_300_rss.json") %>
 
 make_caption <- function(dat) {
   dat <- dat %>%
-    arrange(start) %>% 
+    arrange(start) %>%
     mutate(cap = paste("<h4>", title, "</h4>", description))
   out <- paste(dat$cap, collapse = "<hr>")
   out
@@ -84,9 +84,10 @@ expect_equal(sum(is.na(events$caption)), 0, info = "Missing captions")
 events_map <- leaflet(events) %>%
   addCouncilStyle() %>%
   addCircleMarkers(radius = 4,
-                   color = "#F59F00",
+                   fillColor = "#F59F00",
                    popup = ~councilPopup(caption), popupOptions = popupOptions(maxHeight = 250), fillOpacity = .8,
-                   stroke = FALSE) %>%
+                   stroke = 30,
+                   color = "#00000000") %>%
   setView(-73.88099670410158,40.72540497175607,  zoom = 10.5)%>%
   registerPlugin(geocoder) %>%
   # registerPlugin(fontawsome_markers) %>%
@@ -107,4 +108,23 @@ expect_equal(delete, 0, info = "Could not delete old JS dependencies")
 expect_true(move1, info = "Could not move events_map.html to results/")
 expect_true(move2, info = "Could not move events_map_files/ to results/")
 
+num_events <- list(num_events = nrow(events_raw))
+
+expect_equal(length(num_events), 1)
+expect_equal(length(num_events[[1]]), 1)
+expect_gt(num_events[[1]], 0)
+
+write_json(num_events, "results/num_events.json")
 write_json(updated_at, "results/update_time.json")
+
+events_out <- events_raw %>%
+  unite(start, starts_with("start"), sep = " ") %>%
+  unite(end, starts_with("end"), sep = "") %>%
+  mutate(start = ymd_hm(start),
+         end = ymd_hm(end),
+         pretty_time = format(start, format = "%b %d %I:%M %p")) %>%
+  arrange(start) %>%
+  filter(start > Sys.Date() + 1) %>%
+  head(5)
+
+write_json(events_out, "results/data_files/events.json")
