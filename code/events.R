@@ -67,6 +67,7 @@ events <- events_raw %>%
   unite(end, starts_with("end"), sep = "") %>%
   mutate(start = ymd_hm(start),
          end = ymd_hm(end)) %>%
+  filter(start > Sys.Date()) %>%
   group_by(coordinates) %>%
   nest() %>%
   mutate(caption = map_chr(data, make_caption)) %>%
