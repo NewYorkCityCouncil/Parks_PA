@@ -124,7 +124,6 @@ events_out <- events_raw %>%
          end = ymd_hm(end),
          pretty_time = format(start, format = "%b %d %I:%M %p")) %>%
   arrange(start) %>%
-  filter(start > Sys.Date() + 1) %>%
-  head(5)
+  filter(start > Sys.Date() + 1)
 
 write_json(events_out, "results/data_files/events.json")
