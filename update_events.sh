@@ -13,7 +13,7 @@ Rscript code/events.R
 
 git commit -am "Update map"
 # git checkout gh-pages
-git rebase master
+git rebase gh-pages
 # git checkout master
 git push --all
 
