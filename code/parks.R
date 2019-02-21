@@ -130,7 +130,7 @@ pools <- indoor_pools %>%
                                 Accessible == "Y" ~ "Yes",
                                 TRUE ~ NA_character_),
          popup = pmap_chr(list(Name, Location, Phone, Setting, Size, Accessible),
-                          ~caption_template(header_template(..1, "Handball court", ..2, ..3),
+                          ~caption_template(header_template(..1, "Pool", ..2, ..3),
                                             body_template(`Indoor/Outdoor` = ..4, Size = ..5, Accessible = ..6))))
 
 
