@@ -27,7 +27,7 @@ events_raw <- fromJSON("https://www.nycgovparks.org/xml/events_300_rss.json") %>
   unite(end, starts_with("end"), sep = "") %>%
   mutate(start = ymd_hm(start),
          end = ymd_hm(end)) %>%
-  filter(start > Sys.Date()) %>%
+  filter(start > Sys.time()) %>%
   # as_tibble() %>%
   # mutate(coords = map(coordinates, ~as_tibble(str_split(., ";", simplify = TRUE))),
   #        coords = map(coords, ~separate(., 1, c("lat", "lng"), sep = ", ", convert = TRUE))) %>%
