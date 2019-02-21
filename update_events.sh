@@ -4,7 +4,10 @@ cd Parks_PA
 git checkout master
 export GIT_SSH_COMMAND='ssh -i ~/.ssh/parks_deploy'
 
-git pull --all
+git pull
+git checkout gh-pages
+git pull
+git checkout master
 
 Rscript code/events.R
 
