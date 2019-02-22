@@ -392,8 +392,8 @@ tracks_lat %>%
   mutate_all(~replace_na(., "")) %>%
   write_json("results/data_files/tracks.json")
 bbq %>%
-  as_data_frame() %>%
   st_join(boros, st_intersects) %>%
+  as_data_frame() %>%
   select(Name, Location, Borough = boro_name) %>%
   mutate_if(is.factor, as.character) %>%
   mutate_all(~replace_na(., "")) %>%
