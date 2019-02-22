@@ -319,7 +319,7 @@ m <- leaflet() %>%
   addCircleMarkers(data=handball_lat, group = unname(labels['Handball courts']), fillColor= unname(colors['Handball courts']), fill = TRUE, fillOpacity = .8, stroke = 30, color = "#00000000", radius = 4, popup = ~popup)%>%
   addCircleMarkers(data=tracks_lat, group = unname(labels['Running tracks']), fillColor= unname(colors['Running tracks']), fill = TRUE, fillOpacity = .8, stroke = 30, color = "#00000000", radius = 4, popup = ~popup)%>%
   addPolygons(data = bbq, fillColor = unname(colors["Parks with BBQ facilities"]), group = unname(labels["Parks with BBQ facilities"]), fillOpacity = 1, stroke = FALSE, popup = ~popup) %>%
-  addCircleMarkers(data = concessions, fillColor = unname(colors["Food service"]), group = unname(labels["Food service"]), fillOpacity = .8, stroke = 30, color = "#00000000", radius = 4, popup = ~popup) %>%
+  addCircleMarkers(data = concessions, fillColor = unname(colors["Food service"]), group = unname(labels["Food service"]), fillOpacity = .8, stroke = 30, color = "#00000000", radius = 4, popup = ~popup, popupOptions = popupOptions(maxHeight = 400)) %>%
   addCircleMarkers(data = pools, fillColor = unname(colors["Pools"]), group = unname(labels["Pools"]), fillOpacity = .8, stroke = 30, color = "#00000000", radius = 4, popup = ~popup) %>%
   addPolygons(data = dogs, fillColor = unname(colors["Dog runs and off-leash areas"]), group =  unname(labels["Dog runs and off-leash areas"]), fillOpacity = 1, stroke = FALSE, popup = ~popup) %>%
   addLayersControl(
