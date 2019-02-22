@@ -10,10 +10,10 @@ library(htmlwidgets)
 library(testthat)
 library(gmailr)
 
-send_mail <- function() {
-  send_message(mime(from = "nyccdummyemail@gmail.com", to = "nsolomon@council.nyc.gov", subject = ":( Oh no", body = "Ya done goof'd!"))
-  q(status = 1)
-}
+# send_mail <- function() {
+#   send_message(mime(from = "nyccdummyemail@gmail.com", to = "nsolomon@council.nyc.gov", subject = ":( Oh no", body = "Ya done goof'd!"))
+#   q(status = 1)
+# }
 
 
 options(error = send_mail)
@@ -119,8 +119,6 @@ write_json(num_events, "results/num_events.json")
 write_json(updated_at, "results/update_time.json")
 
 events_out <- events_raw %>%
-  unite(start, starts_with("start"), sep = " ") %>%
-  unite(end, starts_with("end"), sep = "") %>%
   mutate(pretty_time = format(start, format = "%b %d %I:%M %p")) %>%
   arrange(start) %>%
   filter(start > Sys.Date() + 1)
