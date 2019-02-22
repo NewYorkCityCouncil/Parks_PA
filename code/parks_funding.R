@@ -256,4 +256,6 @@ park_maint_cons %>%
   select(Name = signname, `Maintenance funding` = wo_total_parks_maint_cost,
          `Private funding` = funding_amount, Acreage = total_acreage,
          Amenities = site_amenities, Borough = boro_name) %>%
+  mutate_if(is.factor, as.character) %>%
+  mutate_all(~replace_na(., "")) %>%
   write_json("results/data_files/funding.json")

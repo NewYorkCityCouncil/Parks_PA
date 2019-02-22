@@ -363,6 +363,8 @@ playgrounds <- play_areas %>%
 playgrounds %>%
   mutate(rev_geocode = as.character(rev_geocode)) %>%
   select(Name = park_name, Location = rev_geocode, Borough = borough) %>%
+  mutate_if(is.factor, as.character) %>%
+  mutate_all(~replace_na(., "")) %>%
   write_json("results/data_files/playgrounds.json")
 
 bball_lat %>%
@@ -372,36 +374,50 @@ bball_lat %>%
          `Number of courts` = bball_Num_of_Courts,
          Accessible = bball_Accessible,
          Borough = boro_name) %>%
+  mutate_if(is.factor, as.character) %>%
+  mutate_all(~replace_na(., "")) %>%
   write_json("results/data_files/bball.json")
 handball_lat %>%
   st_join(boros, st_intersects) %>%
   as_tibble() %>%
   select(Name = handb_Name, Location = handb_Location, `Number of courts` = handb_Num_of_Courts, Borough = boro_name) %>%
+  mutate_if(is.factor, as.character) %>%
+  mutate_all(~replace_na(., "")) %>%
   write_json("results/data_files/handball.json")
 tracks_lat %>%
   st_join(boros, st_intersects) %>%
   as_data_frame() %>%
   select(Name = tracks_Name, Location = tracks_Location, Size = tracks_Size, `Surface type` = tracks_RunningTracks_Type, Borough = boro_name) %>%
+  mutate_if(is.factor, as.character) %>%
+  mutate_all(~replace_na(., "")) %>%
   write_json("results/data_files/tracks.json")
 bbq %>%
   as_data_frame() %>%
   st_join(boros, st_intersects) %>%
   select(Name, Location, Borough = boro_name) %>%
+  mutate_if(is.factor, as.character) %>%
+  mutate_all(~replace_na(., "")) %>%
   write_json("results/data_files/bbq.json")
 concessions %>%
   st_join(boros, st_intersects) %>%
   as_data_frame() %>%
   select(Name = name, Location = location, Type = type, Website = website, Phone = phone, Email = email, Borough = boro_name) %>%
+  mutate_if(is.factor, as.character) %>%
+  mutate_all(~replace_na(., "")) %>%
   write_json("results/data_files/concessions.json")
 pools %>%
   st_join(boros, st_intersects) %>%
   as_data_frame() %>%
   select(Name, Location, Phone, Setting, Accessible, Borough = boro_name) %>%
+  mutate_if(is.factor, as.character) %>%
+  mutate_all(~replace_na(., "")) %>%
   write_json("results/data_files/pools.json")
 dogs %>%
   st_join(boros, st_intersects) %>%
   as_data_frame() %>%
   select(Name, Address, Type = DogRuns_Type, Accessible, Borough = boro_name) %>%
+  mutate_if(is.factor, as.character) %>%
+  mutate_all(~replace_na(., "")) %>%
   write_json("results/data_files/dogs.json")
 
 
