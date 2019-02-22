@@ -345,8 +345,11 @@ unlink(here::here("results", "facilities_map_files"), recursive = TRUE)
 file.rename("facilities_map.html", "results/facilities_map.html")
 file.rename("facilities_map_files", "results/facilities_map_files")
 
+
 library(ggmap)
 register_google(Sys.getenv("GEOCODE_API_KEY"))
+
+boros <- st_read("https://data.cityofnewyork.us/api/geospatial/tqmj-j8zm?method=export&format=GeoJSON")
 
 
 playgrounds <- play_areas %>%
@@ -359,36 +362,46 @@ playgrounds <- play_areas %>%
 
 playgrounds %>%
   mutate(rev_geocode = as.character(rev_geocode)) %>%
-  select(Name = park_name, Location = rev_geocode) %>%
+  select(Name = park_name, Location = rev_geocode, Borough = borough) %>%
   write_json("results/data_files/playgrounds.json")
 
 bball_lat %>%
+  st_join(boros, st_intersects) %>%
   as_tibble() %>%
-  select(Name = bball_Name, Location = bball_Location, `Number of courts` = bball_Num_of_Courts, Accessible = bball_Accessible) %>%
+  select(Name = bball_Name, Location = bball_Location,
+         `Number of courts` = bball_Num_of_Courts,
+         Accessible = bball_Accessible,
+         Borough = boro_name) %>%
   write_json("results/data_files/bball.json")
 handball_lat %>%
+  st_join(boros, st_intersects) %>%
   as_tibble() %>%
-  select(Name = handb_Name, Location = handb_Location, `Number of courts` = handb_Num_of_Courts) %>%
+  select(Name = handb_Name, Location = handb_Location, `Number of courts` = handb_Num_of_Courts, Borough = boro_name) %>%
   write_json("results/data_files/handball.json")
 tracks_lat %>%
+  st_join(boros, st_intersects) %>%
   as_data_frame() %>%
-  select(Name = tracks_Name, Location = tracks_Location, Size = tracks_Size, `Surface type` = tracks_RunningTracks_Type) %>%
+  select(Name = tracks_Name, Location = tracks_Location, Size = tracks_Size, `Surface type` = tracks_RunningTracks_Type, Borough = boro_name) %>%
   write_json("results/data_files/tracks.json")
 bbq %>%
   as_data_frame() %>%
-  select(Name, Location) %>%
+  st_join(boros, st_intersects) %>%
+  select(Name, Location, Borough = boro_name) %>%
   write_json("results/data_files/bbq.json")
 concessions %>%
+  st_join(boros, st_intersects) %>%
   as_data_frame() %>%
-  select(Name = name, Location = location, Type = type, Website = website, Phone = phone, Email = email) %>%
+  select(Name = name, Location = location, Type = type, Website = website, Phone = phone, Email = email, Borough = boro_name) %>%
   write_json("results/data_files/concessions.json")
 pools %>%
+  st_join(boros, st_intersects) %>%
   as_data_frame() %>%
-  select(Name, Location, Phone, Setting, Accessible) %>%
+  select(Name, Location, Phone, Setting, Accessible, Borough = boro_name) %>%
   write_json("results/data_files/pools.json")
 dogs %>%
+  st_join(boros, st_intersects) %>%
   as_data_frame() %>%
-  select(Name, Address, Type = DogRuns_Type, Accessible) %>%
+  select(Name, Address, Type = DogRuns_Type, Accessible, Borough = boro_name) %>%
   write_json("results/data_files/dogs.json")
 
 
