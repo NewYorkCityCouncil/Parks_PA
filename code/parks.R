@@ -364,7 +364,7 @@ playgrounds %>%
 
 bball_lat %>%
   as_tibble() %>%
-  select(Name = bball_Name, Location = bball_Location, `Number of courts` = bball_Num_of_Courts) %>%
+  select(Name = bball_Name, Location = bball_Location, `Number of courts` = bball_Num_of_Courts, Accessible = bball_Accessible) %>%
   write_json("results/data_files/bball.json")
 handball_lat %>%
   as_tibble() %>%
