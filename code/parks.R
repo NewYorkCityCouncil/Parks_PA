@@ -181,7 +181,7 @@ play_areas <- st_read("data/original_data/Play Areas/geo_export_c03428b3-2818-41
   # st_transform("+proj=longlat +ellps=WGS84 +no_defs") %>%
   group_by(gispropnum, borough, park_name) %>%
   summarize() %>%
-  mutate(popup = map_chr(park_name, ~caption_template(header_template(., "Play area"), body = NULL)))
+  mutate(popup = map_chr(park_name, ~caption_template(header_template(., "Playground"), body = NULL)))
 # st_crs(play_areas) <-4326
 
 
@@ -282,7 +282,7 @@ colors <- c(
   "Basketball courts" = "#d05d4e",
   "Handball courts" = "#ff9938",
   "Running tracks" = "#960057",
-  "Play areas" = "#ff59bf",
+  "Playgrounds" = "#ff59bf",
   "Parks with BBQ facilities" = "#F59F00",
   "Food service" = "#be4bdb",
   "Pools" = "#228ae6",
@@ -309,8 +309,8 @@ m <- leaflet() %>%
   addCircleMarkers(data = play_areas %>% st_centroid() %>% st_transform(crs_string),
               # weight = 10,
               # label = 'park_name',
-              fillColor = unname(colors['Play areas']),
-              group = unname(labels['Play areas']),
+              fillColor = unname(colors['Playgrounds']),
+              group = unname(labels['Playgrounds']),
              fillOpacity = .8,
              stroke = 30, color = "#00000000",
              radius = 4,
