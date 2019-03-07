@@ -13,6 +13,7 @@ library(dplyr)
 library(tidyverse)
 library(htmlwidgets)
 library(htmltools)
+library(councildown)
 
 source("code/util.R")
 
