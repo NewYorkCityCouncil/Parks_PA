@@ -56,7 +56,10 @@ var MapGeoCoderProvider = L.Control.Geocoder.google(data.key, {}),
 marker;
 map = this;
 
-L.Control.geocoder({geocoder:MapGeoCoderProvider, defaultMarkGeocode: false, collapsed: false})
+L.Control.geocoder({geocoder:MapGeoCoderProvider,
+                    defaultMarkGeocode: false,
+                    collapsed: false,
+                    placeholder: 'Address | Borough'})
 .on('markgeocode', function(e) {
 var bbox = e.geocode.bbox;
 var poly = L.polygon([
