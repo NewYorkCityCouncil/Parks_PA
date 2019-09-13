@@ -11,7 +11,7 @@ library(testthat)
 library(gmailr)
 
 send_mail <- function() {
-  send_message(mime(from = "nyccdummyemail@gmail.com", to = "nsolomon@council.nyc.gov", subject = ":( Oh no", body = "Ya done goof'd!"))
+  send_message(mime(from = "nyccdummyemail@gmail.com", to = "bwitte@council.nyc.gov", subject = ":( Oh no", body = "Ya done goof'd!"))
   q(status = 1)
 }
 
